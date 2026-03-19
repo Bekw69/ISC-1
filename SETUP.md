@@ -1,94 +1,100 @@
 # StudyGig — Setup Guide
 
 ## Requirements
+
 - PostgreSQL 16+
-- Java 21+
 - Node.js 20+
-- Maven 3.9+
 
 ---
 
 ## 1. Database Setup
 
 ```bash
-# Create database
 psql -U postgres -c "CREATE DATABASE studygig;"
+```
 
-# Flyway will run migrations automatically when backend starts
-# OR manually:
-psql -U postgres -d studygig -f database/migrations/V1__initial_schema.sql
-psql -U postgres -d studygig -f database/migrations/V2__seed_categories.sql
+Then connect and run the schema:
+
+```sql
+\c studygig
+
+CREATE TABLE users (
+  id       SERIAL PRIMARY KEY,
+  email    TEXT UNIQUE NOT NULL,
+  password TEXT NOT NULL,
+  name     TEXT NOT NULL,
+  role     TEXT NOT NULL DEFAULT 'client'
+);
+
+CREATE TABLE services (
+  id          SERIAL PRIMARY KEY,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price       NUMERIC NOT NULL,
+  category    TEXT NOT NULL DEFAULT 'Other',
+  seller_id   INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE orders (
+  id           SERIAL PRIMARY KEY,
+  service_id   INTEGER REFERENCES services(id) ON DELETE CASCADE,
+  buyer_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  requirements TEXT DEFAULT '',
+  status       TEXT NOT NULL DEFAULT 'pending',
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
 ---
 
-## 2. Backend (Spring Boot)
+## 2. Backend Setup
 
 ```bash
 cd backend
-
-# Build
-mvn clean package -DskipTests
-
-# Run
-mvn spring-boot:run
-
-# OR with custom DB:
-DB_URL=jdbc:postgresql://localhost:5432/studygig \
-DB_USER=postgres \
-DB_PASS=yourpassword \
-mvn spring-boot:run
+cp .env.example .env   # then fill in your values
+npm install
+node server.js
 ```
 
-Backend will start at: http://localhost:8080
-Swagger UI: http://localhost:8080/swagger-ui.html
+Backend starts at: **http://localhost:4000**
 
 ---
 
-## 3. Frontend (React)
+## 3. Frontend Setup
 
 ```bash
 cd frontend
-
-# Install dependencies
 npm install
-
-# Run dev server
 npm run dev
 ```
 
-Frontend will start at: http://localhost:5173
+Frontend starts at: **http://localhost:5173**
 
 ---
 
-## 4. Create Admin User
+## 4. Environment Variables
 
-After backend starts, run this SQL:
+Create `backend/.env` based on `.env.example`:
+
+```env
+JWT_SECRET=your-secret-key
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=studygig
+DB_USER=postgres
+DB_PASSWORD=your-password
+PORT=4000
+```
+
+---
+
+## 5. Create Admin User
 
 ```sql
--- Get bcrypt hash for Admin@123:
--- Use any bcrypt tool or via Spring's BCryptPasswordEncoder
-
-INSERT INTO users (email, password_hash, role, is_active, is_verified)
-VALUES ('admin@studygig.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN', TRUE, TRUE);
-
-INSERT INTO profiles (user_id, display_name)
-SELECT id, 'Admin' FROM users WHERE email = 'admin@studygig.com';
+-- Run in psql after creating a user via /register
+UPDATE users SET role = 'admin' WHERE email = 'your@email.com';
 ```
-
-Admin password: `Admin@123`
-
----
-
-## 5. Docker (all-in-one)
-
-```bash
-docker compose up --build
-```
-
-- Frontend: http://localhost:5173
-- Backend: http://localhost:8080
-- Swagger: http://localhost:8080/swagger-ui.html
 
 ---
 
@@ -96,14 +102,9 @@ docker compose up --build
 
 | Feature | Description |
 |---------|-------------|
-| Auth | JWT + Refresh tokens (HttpOnly cookies) |
-| Profiles | Avatar upload, bio, skills, hourly rate |
-| Services | CRUD with image upload (up to 5 photos) |
-| Orders | Full lifecycle: PENDING → IN_PROGRESS → COMPLETED |
-| Payment | Simulated Stripe-like flow |
-| Reviews | 1-5 stars + comments, auto-calculated ratings |
-| Chat | Real-time WebSocket (STOMP/SockJS) |
-| Complaints | Report users, services, orders |
-| Admin | Dashboard, ban/unban users, manage complaints |
-| i18n | English, Russian, Kazakh |
-| Themes | Light / Dark mode |
+| Auth | JWT via Bearer token, stored in localStorage, 7-day expiry |
+| Services | Full CRUD — students post, edit and delete their services |
+| Orders | Lifecycle: `pending` → `accepted` / `rejected` → `completed` |
+| Role-based access | `student` posts services, `client` places orders, `admin` views all |
+| Category filter | Web Development, Design, Writing, Marketing, Video, Other |
+| Search | Full-text search across service title and description |
