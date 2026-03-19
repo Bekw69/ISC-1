@@ -1,21 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import api from '../api/client'
+import { CATEGORIES, type Service } from '../constants'
 
-const CATEGORIES = [
+const FILTER_CATEGORIES = [
   { label: 'Барлық санаттар', value: '' },
-  { label: 'Веб-разработка',  value: 'Web Development' },
-  { label: 'Дизайн',          value: 'Design' },
-  { label: 'Копирайтинг',     value: 'Writing' },
-  { label: 'Маркетинг',       value: 'Marketing' },
-  { label: 'Видеомонтаж',     value: 'Video' },
-  { label: 'Другое',          value: 'Other' },
+  ...CATEGORIES.map(c => ({ label: c.name, value: c.value })),
 ]
-
-interface Service {
-  id: number; title: string; description: string; price: number
-  category: string; seller_name: string; created_at: string
-}
 
 export default function ServicesPage() {
   const [searchParams] = useSearchParams()
@@ -62,7 +53,7 @@ export default function ServicesPage() {
             <div>
               <p className="text-xs text-gray-500 font-medium mb-2">Категория</p>
               <div className="space-y-1">
-                {CATEGORIES.map(cat => (
+                {FILTER_CATEGORIES.map(cat => (
                   <button
                     key={cat.value}
                     onClick={() => setCategory(cat.value)}

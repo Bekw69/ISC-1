@@ -3,14 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../api/client'
 import { useAuthStore } from '../store/authStore'
-
-const CATEGORIES = ['Web Development', 'Design', 'Writing', 'Marketing', 'Video', 'Other']
+import { CATEGORIES, type Service } from '../constants'
 
 export default function ServiceDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
-  const [service, setService] = useState<any>(null)
+  const [service, setService] = useState<Service | null>(null)
   const [requirements, setRequirements] = useState('')
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -74,7 +73,7 @@ export default function ServiceDetailPage() {
             <div>
               <label className="block text-sm font-medium mb-1">Category</label>
               <select className="w-full border rounded px-3 py-2" value={form.category} onChange={set('category')}>
-                {CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.name}</option>)}
               </select>
             </div>
             <div>

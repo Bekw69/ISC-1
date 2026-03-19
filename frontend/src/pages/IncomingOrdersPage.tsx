@@ -3,18 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../api/client'
 import { useAuthStore } from '../store/authStore'
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-100 text-yellow-700',
-  accepted: 'bg-blue-100 text-blue-700',
-  completed: 'bg-green-100 text-green-700',
-  rejected: 'bg-red-100 text-red-700',
-}
+import { STATUS_COLORS, type Order } from '../constants'
 
 export default function IncomingOrdersPage() {
   const user = useAuthStore(s => s.user)
   const navigate = useNavigate()
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -24,14 +18,14 @@ export default function IncomingOrdersPage() {
 
   const updateStatus = async (id: number, status: string) => {
     await api.patch(`/orders/${id}/status`, { status })
-    setOrders(orders.map(o => o.id === id ? {...o, status} : o))
+    setOrders(orders.map(o => o.id === id ? {...o, status: status as Order['status']} : o))
     toast.success(`Order ${status}`)
   }
 
   if (loading) return <div className="text-center py-16 text-gray-400">Loading...</div>
 
   return (
-    <div>
+    <div className="max-w-3xl mx-auto px-6 py-8">
       <h1 className="text-2xl font-bold mb-6">Incoming Orders</h1>
       {orders.length === 0 ? (
         <div className="text-center py-16 text-gray-400">No incoming orders yet.</div>

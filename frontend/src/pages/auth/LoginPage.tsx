@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import api from '../../api/client'
 import { useAuthStore } from '../../store/authStore'
-
-const inp = 'w-full border border-gray-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-indigo-400'
+import { INPUT_CLASS as inp } from '../../constants'
 
 export default function LoginPage() {
   const navigate = useNavigate()

@@ -1,20 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../api/client'
-
-const CATEGORIES = [
-  { name: 'Веб-разработка', icon: '💻', value: 'Web Development' },
-  { name: 'Дизайн',         icon: '🎨', value: 'Design' },
-  { name: 'Копирайтинг',    icon: '✍️', value: 'Writing' },
-  { name: 'Маркетинг',      icon: '📈', value: 'Marketing' },
-  { name: 'Видеомонтаж',    icon: '🎬', value: 'Video' },
-  { name: 'Другое',         icon: '🔧', value: 'Other' },
-]
+import { CATEGORIES, type Service } from '../constants'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
-  const [services, setServices] = useState<any[]>([])
+  const [services, setServices] = useState<Service[]>([])
 
   useEffect(() => {
     api.get('/services').then(r => setServices(r.data.slice(0, 8))).catch(() => {})
